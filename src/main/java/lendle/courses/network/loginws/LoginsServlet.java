@@ -5,12 +5,17 @@
  */
 package lendle.courses.network.loginws;
 
+import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
@@ -39,7 +44,13 @@ public class LoginsServlet extends HttpServlet {
         try (PrintWriter out=response.getWriter(); Connection conn=DriverManager.getConnection("jdbc:derby://localhost:1527/sample", "app", "app")) {
             //select from login
             //output in id:password style
-            
+            Statement stmt=conn.createStatement();
+            ResultSet res= stmt.executeQuery("select * from login");
+            while(res.next()){
+               String id=res.getString("ID");
+               String pass=res.getString("PASSWORD");
+               out.println(id+":"+pass);
+            }
             //////////////////////////////
         }catch(Exception e){
             throw new ServletException(e);
@@ -51,7 +62,21 @@ public class LoginsServlet extends HttpServlet {
         try (PrintWriter out=response.getWriter(); Connection conn=DriverManager.getConnection("jdbc:derby://localhost:1527/sample", "app", "app")) {
             //re-implement service1, this time
             //responde in json format
+            Statement stmt=conn.createStatement();
+            ResultSet res= stmt.executeQuery("select * from login");
+            List list=new Vector();
             
+            while(res.next()){
+               String id=res.getString("ID");
+               String pass=res.getString("PASSWORD");
+               Map map=new HashMap();
+               map.put("id", id);
+               map.put("password", pass);
+               list.add(map);
+            }
+            Gson gson=new Gson();
+            String json=gson.toJson(list);
+            out.print(json);
             //////////////////////////////
         }catch(Exception e){
             throw new ServletException(e);
@@ -70,7 +95,7 @@ public class LoginsServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        service1(request, response);
+        service2(request, response);
     }
 
 }
