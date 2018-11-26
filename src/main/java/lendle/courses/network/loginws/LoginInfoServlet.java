@@ -97,7 +97,11 @@ public class LoginInfoServlet extends HttpServlet {
             String id=request.getParameter("id");
             String password=request.getParameter("password");
             //////////////////////////////
-            out.println("success");
+            PreparedStatement pstmt=conn.prepareStatement("update LOGIN set PASSWORD=? where ID=?");
+            pstmt.setString(1, password);
+            pstmt.setString(2, id);
+            int ret=pstmt.executeUpdate();
+            out.println(ret);
         }catch(Exception e){
             throw new ServletException(e);
         }
@@ -110,7 +114,10 @@ public class LoginInfoServlet extends HttpServlet {
             //delete the corresponding user
             String id=request.getParameter("id");
             //////////////////////////////
-            out.println("success");
+            PreparedStatement pstmt=conn.prepareStatement("delete from login where id=?");
+            pstmt.setString(1, id);
+            int ret=pstmt.executeUpdate();
+            out.println(ret);
         }catch(Exception e){
             throw new ServletException(e);
         }
