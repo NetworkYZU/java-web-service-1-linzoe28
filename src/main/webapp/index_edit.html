@@ -13,26 +13,113 @@ and open the template in the editor.
         <script src="https://cdn.jsdelivr.net/npm/vue"></script>
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
         <link href="https://code.jquery.com/ui/1.12.1/themes/ui-lightness/jquery-ui.css" rel="stylesheet" type="text/css" />
+        <script>
+            var model = null;
+            var dlgmodel = null;
+            $(document).ready(function () {
+                dlgmodel = new Vue({
+                    el: "#dlg",
+                    data: {
+                        id: "",
+                        password: ""
+                    }
+                });
+                $.ajax("logins", {
+                    success: function (data) {
+                        model = new Vue({
+                            el: "#app",
+                            data: {
+                                logins: data
+                            }, methods: {
+                                deleteLogin: function (i) {
+                                    $.ajax("login_info?id="+model.logins[i].id,{
+                                        type:"DELETE",
+                                        success:function(d){
+                                            model.logins.splice(i, 1);
+                                        }
+                                    });
+                                },
+                                editLogin: function (o) {
+                                    dlgmodel.id = o.id;
+                                    dlgmodel.password = o.password;
+                                    $("#dlg").dialog({
+                                        modal: true,
+                                        buttons: [
+                                            {
+                                                text: "OK",
+                                                click: function () {
+                                                    $.ajax("login_info?id="+dlgmodel.id+"&password="+dlgmodel.password, {
+                                                        type: "PUT",
+                                                        success: function (d) {
+                                                            o.id = dlgmodel.id;
+                                                            o.password = dlgmodel.password;
+                                                        }
+                                                    });
+                                                    $(this).dialog("close");
+                                                }
+                                            }
+                                        ]
+                                    });
+                                }
+                            }
+                        });
+                    }
+                })
+            });
+            function addLogin() {
+                dlgmodel.id = "";
+                dlgmodel.password = "";
+                $("#dlg").dialog({
+                    modal: true,
+                    buttons: [
+                        {
+                            text: "OK",
+                            click: function () {
+                                $.ajax("login_info", {
+                                    type: "POST",
+                                    data: {
+                                        id: dlgmodel.id,
+                                        password: dlgmodel.password
+                                    }, success: function (d) {
+                                        model.logins.push({
+                                            id: dlgmodel.id,
+                                            password: dlgmodel.password
+                                        });
+                                    }
+                                });
+                                $(this).dialog("close");
+                            }
+                        }
+                    ]
+                });
+            }
+        </script>   
     </head>
     <body>
+        <button onclick="addLogin();">New</button>
         <table id="app" border="1">
             <thead>
                 <tr>
+                    <td>num</td>
                     <td>ID</td>
                     <td>PASSWORD</td>
-                    <td></td>
-                    <td></td>
+                    <td>edit</td>
+                    <td>delete</td>
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="login in logins">
+                <tr v-for="(login,index) in logins">
+                    <td>{{index}}</td>
                     <td>{{login.id}}</td>
                     <td>{{login.password}}</td>
-                    <td></td>
-                    <td></td>
+                    <td><button v-on:click="editLogin(login);">Edit</button></td>
+                    <td><button v-on:click="deleteLogin(index);">Delete</button></td>
                 </tr>
             </tbody>
         </table>
-        
+        <div id="dlg" style="display:none">
+            ID:<input type="text" v-model="id"/><br/>
+            PASSWORD<input type="text"v-model="password"/><br/>
+        </div>
     </body>
 </html>
